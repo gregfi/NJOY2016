@@ -9,6 +9,7 @@ module matxsm
    ! equivalenced arrays for CCCC input and output
    integer::isiza=200000    ! container array size
    real(k4)::a(200000)      ! reals are 4-byte
+   real(k4)::a0(200000)     ! reals are 4-byte
    integer(k4)::ia(200000)  ! integers are 4-byte
    real(k8)::ha(100000)     ! Hollerith data are 8-byte
    character(8)::ta(100000) ! text equivalent to Hollerith
@@ -461,6 +462,7 @@ contains
    ngen6=0
    ngen7=0
    ngen8=0
+   a0=0.0
    read(nsysi,*) ngen1,ngen2,nmatx,ngen3,ngen4,ngen5,ngen6,ngen7,ngen8
    write(nsyso,'(/&
      &'' input gendf unit ..................... '',i10/&
@@ -2043,7 +2045,7 @@ contains
    ! internals
    integer::i,irinp,ig,igr,ig2lo,idref,ig2lor,jg1,ik
    integer::nb,nw,ng2,loc,ng2r,jg2,n,nl
-   integer,parameter::maxb=30000
+   integer,parameter::maxb=300000
    real(kr)::b(maxb)
 
    !--initialize banding data
@@ -2141,7 +2143,7 @@ contains
    integer::ig,igr,ig2lo,idref,ig2lor,ik,jg2,jg1,il
    integer::i1,imax1,nb,nw,lz,nl,ng2,loc,ng2r,niloc
    integer::kp,jp,np,noloc,j
-   integer,parameter::maxb=30000
+   integer,parameter::maxb=300000
    real(kr)::b(maxb)
 
    !--loop over records on input tape
@@ -2219,12 +2221,14 @@ contains
    go to 145
   135 do ik=1,ng2
       jg2=noutg-ig2lo-ik+2
-      a(icdat-1+jg2)=b(irinp+lz+(ik-1)*nz+iz-1)
+      a(icdat-1+jg2)=b(irinp+lz+(ik-1)*nz+iz-1)-a0(icdat-1+jg2) 
+      if (iref.eq.0) a0(icdat-1+jg2)=b(irinp+lz+(ik-1)*nz+iz-1)
    enddo
    go to 240
   140 jconst=ig
    jg1=ning+1-ig
-   a(icdat-1+noutg+jg1)=b(irinp+lz+nz+iz-1)
+   a(icdat-1+noutg+jg1)=b(irinp+lz+nz+iz-1)-a0(icdat-1+noutg+jg1) 
+   if (iref.eq.0) a0(icdat-1+noutg+jg1)=b(irinp+lz+nz+iz-1)
    go to 240
 
    !--store matrix sub-blocks
@@ -2364,10 +2368,10 @@ contains
    nwd=6-nwh
    if (nwd.le.0) go to 120
    if (nx.ne.0) write(hfmt,&
-     &'(''('',i2,''a4,'',i2,''x,1p'',i1,''e11.0)'')')&
+     &'(''('',i2,''a4,'',i2,''x,'',i1,''e11.0)'')')&
      ntw,nx,nwd
    if (nx.eq.0) write(hfmt,&
-     '(''('',i2,''a4,'',''1p'',i1,''e11.0)'')')&
+     '(''('',i2,''a4,'',i1,''e11.0)'')')&
      ntw,nwd
    read(nin,hfmt) (tz(i),i=1,ntw),(a(i+nw1+ntw),i=1,nwd)
    do i=1,ntw
